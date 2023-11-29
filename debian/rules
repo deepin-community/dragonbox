@@ -3,6 +3,22 @@
 %:
 	dh $@
 
+override_dh_auto_clean:
+	dh_auto_clean
+	if [ -f subproject/test/Makefile ]; then cd subproject/test && $(MAKE) clean; fi
+	rm -rf subproject/test/_deps subproject/test/CMakeFiles/ \
+		subproject/test/CMakeCache.txt subproject/test/CTestTestfile.cmake \
+		subproject/test/Makefile subproject/test/Testing/Temporary/CTestCostData.txt \
+	       	subproject/test/Testing/Temporary/LastTest.log subproject/test/cmake_install.cmake \
+		subproject/test/results/binary32.csv subproject/test/results/binary64.csv
+
 override_dh_auto_configure:
 	dh_auto_configure -- \
 	-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
+
+override_dh_auto_test:
+	cd subproject/test && \
+		cmake . && \
+		$(MAKE) && \
+		ctest .
+
