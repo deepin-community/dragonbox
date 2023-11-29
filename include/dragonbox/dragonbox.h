@@ -1842,6 +1842,7 @@ namespace jkj::dragonbox {
                             ret_value.significand *= 10;
                             ret_value.exponent = minus_k + kappa;
                             --ret_value.significand;
+                            TrailingZeroPolicy::template no_trailing_zeros<impl>(ret_value);
                             return ret_value;
                         }
                         else {
@@ -2055,7 +2056,9 @@ namespace jkj::dragonbox {
                 // Using an upper bound on xi, we might be able to optimize the division
                 // better than the compiler; we are computing xi / big_divisor here.
                 ret_value.significand =
-                    div::divide_by_pow10<kappa + 1, significand_bits + kappa + 2, kappa + 1>(xi);
+                    div::divide_by_pow10<kappa + 1, carrier_uint,
+                                         (carrier_uint(1) << (significand_bits + 1)) * big_divisor -
+                                             1>(xi);
                 auto r = std::uint32_t(xi - big_divisor * ret_value.significand);
 
                 if (r != 0) {
@@ -2130,7 +2133,9 @@ namespace jkj::dragonbox {
                 // Using an upper bound on zi, we might be able to optimize the division better than
                 // the compiler; we are computing zi / big_divisor here.
                 ret_value.significand =
-                    div::divide_by_pow10<kappa + 1, significand_bits + kappa + 2, kappa + 1>(zi);
+                    div::divide_by_pow10<kappa + 1, carrier_uint,
+                                         (carrier_uint(1) << (significand_bits + 1)) * big_divisor -
+                                             1>(zi);
                 auto const r = std::uint32_t(zi - big_divisor * ret_value.significand);
 
                 if (r > deltai) {
@@ -2547,7 +2552,7 @@ namespace jkj::dragonbox {
 
                         // Shorter interval case; proceed like Schubfach.
                         // One might think this condition is wrong, since when exponent_bits == 1
-                        // and two_fc == 0, the interval is actullay regular. However, it turns out
+                        // and two_fc == 0, the interval is actually regular. However, it turns out
                         // that this seemingly wrong condition is actually fine, because the end
                         // result is anyway the same.
                         //
